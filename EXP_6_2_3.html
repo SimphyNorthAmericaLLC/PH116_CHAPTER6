@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Planck_Fit_Widget.html</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+
+<style>
+body {
+    background-color:#1e1e1e;
+    color:white;
+    font-family:monospace;
+    padding:15px;
+}
+.editor {
+    display:flex;
+    border:1px solid #444;
+    height:520px;
+}
+#lineNumbers {
+    background:#111;
+    color:#00ff00;
+    padding:10px 8px;
+    margin:0;
+    text-align:right;
+    overflow:hidden;
+    white-space:pre;
+}
+#code {
+    flex:1;
+    background:#111;
+    color:white;
+    border:none;
+    padding:10px;
+    resize:none;
+    overflow:auto;
+    white-space:pre;
+}
+button {
+    margin-top:10px;
+    padding:8px 14px;
+    background:#007acc;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+#output {
+    background:#111;
+    padding:10px;
+    margin-top:10px;
+    min-height:60px;
+    white-space:pre-wrap;
+}
+#plot {
+    margin-top:10px;
+    max-width:100%;
+    background:white;
+}
+</style>
+</head>
+
+<body>
+
+<h3>Planck Constant Fit</h3>
+
+<div class="editor">
+<pre id="lineNumbers"></pre>
+<textarea id="code" wrap="off">import numpy as np
+import matplotlib.pyplot as plt
+
+# --- Constants ---
+c  = 3.00e8
+kB = 1.380649e-23
+T  = 5000.0
+h_true = 6.626e-34
+
+# --- Frequency range ---
+nu = np.linspace(1e13, 5e14, 600)
+
+# --- Generate "experimental" data with noise ---
+u_true = (8*np.pi*h_true*nu**3)/(c**3*(np.exp(h_true*nu/(kB*T))-1))
+noise = 0.02*u_true.max()*np.random.randn(len(nu))
+u_exp = u_true + noise
+
+# --- Scan h values and compute chi² ---
+h_values = np.linspace(3e-34, 1e-33, 40)
+chi2 = []
+for h in h_values:
+    u_model = (8*np.pi*h*nu**3)/(c**3*(np.exp(h*nu/(kB*T))-1))
+    chi2.append(np.mean((u_exp - u_model)**2))
+chi2 = np.array(chi2)
+
+# --- Best-fit h ---
+h_best = h_values[np.argmin(chi2)]
+u_best = (8*np.pi*h_best*nu**3)/(c**3*(np.exp(h_best*nu/(kB*T))-1))
+
+# --- Combined plot ---
+fig, ax = plt.subplots(1, 2, figsize=(12,5))
+
+# Left: chi² vs h
+ax[0].plot(h_values*1e34, chi2, 'r-o')
+ax[0].set_xlabel("Planck constant h (×10⁻³⁴ J·s)")
+ax[0].set_ylabel("Mean-square error χ²")
+ax[0].set_title("Fit Quality vs h")
+ax[0].grid(True)
+
+# Right: experimental data and best-fit curve
+ax[1].scatter(nu/1e12, u_exp/u_exp.max(), s=10, c='k', alpha=0.4, label="Experimental data")
+ax[1].plot(nu/1e12, u_best/u_best.max(), 'r', lw=2, label=f"Best fit: h = {h_best:.3e} J·s")
+ax[1].set_xlabel("Frequency (THz)")
+ax[1].set_ylabel("Normalized intensity u(ν)/max")
+ax[1].set_title(f"Planck Fit at T = {T:.0f} K")
+ax[1].legend()
+ax[1].grid(True)
+
+plt.tight_layout()
+plt.show()
+</textarea>
+</div>
+
+<button onclick="runCode()">Run</button>
+
+<div id="output"></div>
+<img id="plot">
+
+<script>
+let pyodideReady = loadPyodide();
+let pyodide;
+
+const code = document.getElementById("code");
+const lineNumbers = document.getElementById("lineNumbers");
+
+function updateLineNumbers() {
+    const lines = code.value.split("\n").length;
+    let numbers = "";
+    for(let i=1;i<=lines;i++) numbers += i + "\n";
+    lineNumbers.textContent = numbers;
+}
+
+code.addEventListener("input", updateLineNumbers);
+code.addEventListener("scroll", () => lineNumbers.scrollTop = code.scrollTop);
+updateLineNumbers();
+
+async function runCode() {
+    pyodide = await pyodideReady;
+    document.getElementById("output").innerText = "Running...";
+
+    await pyodide.loadPackage(["numpy","matplotlib"]);
+
+    try {
+        await pyodide.runPythonAsync(`
+import sys
+from io import StringIO
+import matplotlib
+matplotlib.use("AGG")
+sys.stdout = StringIO()
+`);
+
+        await pyodide.runPythonAsync(code.value + `
+import io, base64
+buf = io.BytesIO()
+plt.savefig(buf, format="png", bbox_inches="tight")
+buf.seek(0)
+plot_data = base64.b64encode(buf.read()).decode()
+plt.close('all')
+`);
+
+        let output = await pyodide.runPythonAsync("sys.stdout.getvalue()");
+        let img = await pyodide.runPythonAsync("plot_data");
+
+        document.getElementById("output").innerText = output || "Done.";
+        document.getElementById("plot").src = "data:image/png;base64," + img;
+
+    } catch(err) {
+        document.getElementById("output").innerText = err;
+    }
+}
+</script>
+
+</body>
+</html>

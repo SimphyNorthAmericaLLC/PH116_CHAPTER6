@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>1-D String Modes</title>
+<style>
+  body {
+    background: #0a0a0a;
+    color: white;
+    font-family: system-ui, sans-serif;
+    text-align: center;
+  }
+  canvas {
+    background: #111;
+    display: block;
+    margin: 1rem auto;
+    border: 1px solid #333;
+  }
+  select {
+    font-size: 1rem;
+    margin-top: .5rem;
+    padding: .3rem;
+  }
+</style>
+</head>
+<body>
+<h2>Standing Wave Modes on a 1-D String</h2>
+<canvas id="waveCanvas" width="800" height="300"></canvas>
+<div>
+  <label for="modeSelect">Mode (n): </label>
+  <select id="modeSelect">
+    <option value="1" selected>1 (Fundamental)</option>
+    <option value="2">2 (1st Overtone)</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+  </select>
+</div>
+
+<script>
+const canvas = document.getElementById("waveCanvas");
+const ctx = canvas.getContext("2d");
+const modeSelect = document.getElementById("modeSelect");
+
+let n = 1;
+let t = 0;
+const L = canvas.width;
+const A = 80; // amplitude
+const ω = 0.04; // angular frequency
+
+modeSelect.addEventListener("change", () => {
+  n = parseInt(modeSelect.value);
+});
+
+function drawString() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2);
+
+  for (let x = 0; x <= L; x++) {
+    const y = A * Math.sin(n * Math.PI * x / L) * Math.cos(ω * t);
+    ctx.lineTo(x, canvas.height / 2 - y);
+  }
+
+  ctx.strokeStyle = "deepskyblue";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Draw nodes
+  ctx.fillStyle = "red";
+  for (let i = 0; i <= n; i++) {
+    const xNode = (i * L) / n;
+    ctx.beginPath();
+    ctx.arc(xNode, canvas.height / 2, 4, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+
+  // Label
+  ctx.fillStyle = "white";
+  ctx.fillText(`Mode n = ${n}`, 20, 25);
+}
+
+function animate() {
+  drawString();
+  t++;
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Random Ball Exchange</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+<style>
+body {
+    background:#1e1e1e;
+    color:white;
+    font-family:monospace;
+    padding:15px;
+}
+.editor {
+    display:flex;
+    border:1px solid #444;
+    height:420px;
+}
+#lineNumbers {
+    background:#111;
+    color:#00ff00;
+    padding:10px 8px;
+    margin:0;
+    text-align:right;
+    overflow:hidden;
+    white-space:pre;
+}
+#code {
+    flex:1;
+    background:#111;
+    color:white;
+    border:none;
+    padding:10px;
+    resize:none;
+    overflow:auto;
+    white-space:pre;
+}
+button {
+    margin-top:10px;
+    padding:8px 14px;
+    background:#007acc;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+#output {
+    background:#111;
+    padding:10px;
+    margin-top:10px;
+    min-height:60px;
+    white-space:pre-wrap;
+}
+#plot {
+    margin-top:10px;
+    background:white;
+    padding:10px;
+}
+</style>
+</head>
+<body>
+
+<h3>Random Ball Exchange Simulation</h3>
+
+<div class="editor">
+<pre id="lineNumbers"></pre>
+<textarea id="code" wrap="off">import numpy as np
+import matplotlib.pyplot as plt
+
+# --- Parameters ---
+N = 1000          # number of boxes
+M = 10            # average number of balls per box (initial)
+steps = 1_000_000 # number of random moves
+
+# --- Initialization ---
+boxes = np.full(N, M, dtype=int)  # start with M balls per box
+
+# --- Random redistribution ---
+for _ in range(steps):
+    i, j = np.random.randint(0, N, 2)  # pick two random boxes
+    if boxes[i] > 0:                   # move a ball only if box i has one
+        boxes[i] -= 1
+        boxes[j] += 1
+
+# --- Analysis ---
+n_values, counts = np.unique(boxes, return_counts=True)
+P_sim = counts / N                     # simulated probability
+P_theory = (1/M) * np.exp(-n_values/M) # theoretical exponential law
+
+# --- Plot ---
+plt.figure(figsize=(8,5))
+plt.bar(n_values, P_sim, width=0.8, alpha=0.6, label='Simulation')
+plt.plot(n_values, P_theory, 'r-', lw=2, label='Theory: (1/M) exp(-n/M)')
+plt.xlabel('Balls per box (n)')
+plt.ylabel('Probability P(n)')
+plt.title(f'Random Ball Exchange: N={N}, M={M}')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+</textarea>
+</div>
+
+<button onclick="runCode()">Run</button>
+
+<div id="output"></div>
+<div id="plot"></div>
+
+<script>
+let pyodideReady = loadPyodide();
+let pyodide;
+
+const codeEl = document.getElementById("code");
+const lineNumbers = document.getElementById("lineNumbers");
+
+function updateLineNumbers(){
+    const lines = codeEl.value.split("\n").length;
+    let nums="";
+    for(let i=1;i<=lines;i++) nums += i + "\n";
+    lineNumbers.textContent = nums;
+}
+
+codeEl.addEventListener("input", updateLineNumbers);
+codeEl.addEventListener("scroll", () => lineNumbers.scrollTop = codeEl.scrollTop);
+updateLineNumbers();
+
+async function runCode(){
+    pyodide = await pyodideReady;
+
+    document.getElementById("output").innerText = "Running...";
+    document.getElementById("plot").innerHTML = "";
+
+    await pyodide.loadPackage(["numpy","matplotlib"]);
+
+    try {
+        await pyodide.runPythonAsync(`
+import matplotlib
+matplotlib.use("AGG")
+import matplotlib.pyplot as plt
+import sys, io, base64
+
+sys.stdout = io.StringIO()
+`);
+
+        await pyodide.runPythonAsync(codeEl.value + `
+import io, base64
+buf = io.BytesIO()
+plt.savefig(buf, format="png", bbox_inches="tight")
+buf.seek(0)
+img_b64 = base64.b64encode(buf.read()).decode()
+`);
+
+        let out = await pyodide.runPythonAsync("sys.stdout.getvalue()");
+        let img = await pyodide.runPythonAsync("img_b64");
+
+        document.getElementById("output").innerText = out || "Done.";
+        document.getElementById("plot").innerHTML =
+            `<img src="data:image/png;base64,${img}" style="max-width:100%;">`;
+
+    } catch(err) {
+        document.getElementById("output").innerText = err;
+    }
+}
+</script>
+
+</body>
+</html>

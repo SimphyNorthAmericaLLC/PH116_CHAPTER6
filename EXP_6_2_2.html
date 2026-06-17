@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Classical vs Quantum Oscillator</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: radial-gradient(circle at center, #000, #0a0a0a);
+    color: white; text-align: center;
+  }
+  canvas { background: #111; display: block; margin: 20px auto; border-radius: 10px; }
+  p { margin-top: 0; }
+</style>
+</head>
+<body>
+<h1>Mechanical Analogy of an Atomic Vibration</h1>
+<p>Left: Classical spring (continuous energy) — Right: Quantum oscillator (discrete levels)</p>
+<canvas id="scene" width="700" height="300"></canvas>
+
+<script>
+const canvas = document.getElementById("scene");
+const ctx = canvas.getContext("2d");
+let t = 0;
+const h = 6.626e-34, f = 1, A = 60; // amplitude for classical
+let level = 0;
+
+function drawSpring(x0, y0, length, amplitude, phase, color) {
+  const coils = 8;
+  const points = 80;
+  ctx.beginPath();
+  for (let i=0; i<=points; i++) {
+    const x = x0;
+    const y = y0 + (length/points)*i + amplitude * Math.sin(phase + i/points*coils*2*Math.PI);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function animate(){
+  t += 0.02;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Classical oscillator
+  const Aclass = A * Math.sin(2*Math.PI*f*t);
+  drawSpring(200, 50, 150, 10, 2*Math.PI*t*f, "#00ff88");
+  ctx.beginPath();
+  ctx.arc(200, 200 + Aclass, 15, 0, 2*Math.PI);
+  ctx.fillStyle = "#00ff88";
+  ctx.fill();
+  ctx.fillText("Classical", 160, 260);
+
+  // Quantum oscillator (discrete jump)
+  if (t % 1 < 0.05) level = Math.floor(Math.random()*5);
+  const E = (level + 0.5) * h * f;
+  const Aq = 20 + level*25; // visual spacing
+  drawSpring(500, 50, 150, 10, 2*Math.PI*t*f, "#ffaa00");
+  ctx.beginPath();
+  ctx.arc(500, 200 - Aq, 15, 0, 2*Math.PI);
+  ctx.fillStyle = "#ffaa00";
+  ctx.fill();
+  ctx.fillText(`Quantum (n=${level})`, 440, 260);
+
+  // Labels
+  ctx.fillStyle = "#fff";
+  ctx.fillText(`Energy spacing = h f = ${(h*f).toExponential(2)} J`, 200, 20);
+
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>JR_Planck_Deviation_Widget.html</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+
+<style>
+body {
+    background-color:#1e1e1e;
+    color:white;
+    font-family:monospace;
+    padding:15px;
+}
+.editor {
+    display:flex;
+    border:1px solid #444;
+    height:520px;
+}
+#lineNumbers {
+    background:#111;
+    color:#00ff00;
+    padding:10px 8px;
+    margin:0;
+    text-align:right;
+    overflow:hidden;
+    white-space:pre;
+}
+#code {
+    flex:1;
+    background:#111;
+    color:white;
+    border:none;
+    padding:10px;
+    resize:none;
+    overflow:auto;
+    white-space:pre;
+}
+button {
+    margin-top:10px;
+    padding:8px 14px;
+    background:#007acc;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+#output {
+    background:#111;
+    padding:10px;
+    margin-top:10px;
+    min-height:60px;
+    white-space:pre-wrap;
+}
+#plot {
+    margin-top:10px;
+    max-width:100%;
+    background:white;
+}
+</style>
+</head>
+
+<body>
+
+<h3>JR Planck Deviation</h3>
+
+<div class="editor">
+<pre id="lineNumbers"></pre>
+<textarea id="code" wrap="off">import numpy as np
+import matplotlib.pyplot as plt
+
+# --- Physical constants ---
+h = 6.62607015e-34  # Planck constant (J·s)
+k = 1.380649e-23    # Boltzmann constant (J/K)
+c = 3e8              # speed of light (m/s)
+
+# --- Temperature (change if you like) ---
+T = 5800  # K (Sun's surface temperature)
+
+# --- Frequency range ---
+nu = np.logspace(11, 15, 500)  # 10^11 to 10^15 Hz
+
+# --- Formulas ---
+I_planck = (2*h*nu**3 / c**2) / (np.exp(h*nu/(k*T)) - 1)
+I_RJ = (2*k*T*nu**2) / c**2
+
+# --- Crossover point (hν = kT) ---
+nu_c = k*T / h
+I_c = (2*h*nu_c**3 / c**2) / (np.exp(h*nu_c/(k*T)) - 1)
+
+# --- Plot ---
+plt.figure(figsize=(8,5))
+plt.loglog(nu, I_planck, 'r-', lw=2, label='Planck Law')
+plt.loglog(nu, I_RJ, 'b--', lw=2, label='Rayleigh–Jeans Law')
+plt.axvline(nu_c, color='k', ls=':', lw=2, label=r'$h\nu = kT$')
+plt.scatter([nu_c], [I_c], color='k', zorder=5)
+
+# --- Labels ---
+plt.xlabel('Frequency ν (Hz)')
+plt.ylabel('Spectral Radiance I(ν)')
+plt.title(f'Planck vs Rayleigh–Jeans (T = {T} K)')
+plt.legend()
+plt.grid(True, which='both', ls=':', alpha=0.4)
+plt.show()
+</textarea>
+</div>
+
+<button onclick="runCode()">Run</button>
+
+<div id="output"></div>
+<img id="plot">
+
+<script>
+let pyodideReady = loadPyodide();
+let pyodide;
+
+const code = document.getElementById("code");
+const lineNumbers = document.getElementById("lineNumbers");
+
+function updateLineNumbers() {
+    const lines = code.value.split("\n").length;
+    let numbers = "";
+    for(let i=1;i<=lines;i++) numbers += i + "\n";
+    lineNumbers.textContent = numbers;
+}
+
+code.addEventListener("input", updateLineNumbers);
+code.addEventListener("scroll", () => lineNumbers.scrollTop = code.scrollTop);
+updateLineNumbers();
+
+async function runCode() {
+    pyodide = await pyodideReady;
+    document.getElementById("output").innerText = "Running...";
+
+    await pyodide.loadPackage(["numpy","matplotlib"]);
+
+    try {
+        await pyodide.runPythonAsync(`
+import sys
+from io import StringIO
+import matplotlib
+matplotlib.use("AGG")
+sys.stdout = StringIO()
+`);
+
+        await pyodide.runPythonAsync(code.value + `
+import io, base64
+buf = io.BytesIO()
+plt.savefig(buf, format="png", bbox_inches="tight")
+buf.seek(0)
+plot_data = base64.b64encode(buf.read()).decode()
+plt.close('all')
+`);
+
+        let output = await pyodide.runPythonAsync("sys.stdout.getvalue()");
+        let img = await pyodide.runPythonAsync("plot_data");
+
+        document.getElementById("output").innerText = output || "Done.";
+        document.getElementById("plot").src = "data:image/png;base64," + img;
+
+    } catch(err) {
+        document.getElementById("output").innerText = err;
+    }
+}
+</script>
+
+</body>
+</html>

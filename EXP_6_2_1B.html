@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2-D Membrane Modes</title>
+<style>
+  body {
+    background:#0a0a0a;
+    color:white;
+    text-align:center;
+    font-family:system-ui,sans-serif;
+  }
+  canvas {
+    background:#111;
+    display:block;
+    margin:1rem auto;
+    border:1px solid #333;
+  }
+  label,select {font-size:1rem; margin:0 .5rem;}
+</style>
+</head>
+<body>
+<h2>2-D Standing Wave Modes on a Square Membrane</h2>
+<canvas id="membrane" width="400" height="400"></canvas>
+<div>
+  <label for="mSelect">m:</label>
+  <select id="mSelect"></select>
+  <label for="nSelect">n:</label>
+  <select id="nSelect"></select>
+</div>
+
+<script>
+const canvas = document.getElementById("membrane");
+const ctx = canvas.getContext("2d");
+const mSelect = document.getElementById("mSelect");
+const nSelect = document.getElementById("nSelect");
+
+for(let i=1;i<=5;i++){
+  mSelect.innerHTML += `<option value="${i}">${i}</option>`;
+  nSelect.innerHTML += `<option value="${i}">${i}</option>`;
+}
+mSelect.value = 1;
+nSelect.value = 1;
+
+let m=1,n=1,t=0;
+const A=1,ω=0.05;
+const Nx=150,Ny=150; // grid resolution
+
+mSelect.addEventListener("change",()=>m=parseInt(mSelect.value));
+nSelect.addEventListener("change",()=>n=parseInt(nSelect.value));
+
+function drawMembrane(){
+  const img = ctx.createImageData(canvas.width, canvas.height);
+  const data = img.data;
+  for(let y=0;y<canvas.height;y++){
+    for(let x=0;x<canvas.width;x++){
+      const X=x/canvas.width, Y=y/canvas.height;
+      const z=A*Math.sin(m*Math.PI*X)*Math.sin(n*Math.PI*Y)*Math.cos(ω*t);
+      const color=Math.floor(128+127*z); // map -1..1 → 0..255
+      const idx=4*(y*canvas.width+x);
+      data[idx]=0;
+      data[idx+1]=color;
+      data[idx+2]=255-color;
+      data[idx+3]=255;
+    }
+  }
+  ctx.putImageData(img,0,0);
+  ctx.fillStyle="white";
+  ctx.fillText(`Mode (m,n)=(${m},${n})`,10,20);
+}
+
+function animate(){
+  drawMembrane();
+  t++;
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

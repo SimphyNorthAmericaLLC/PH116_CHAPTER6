@@ -1,0 +1,376 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+#root{font-family:var(--font-sans);padding:14px;display:flex;flex-direction:column;gap:12px}
+#controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.ctitle{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.cr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.cl{font-size:14px;color:var(--color-text-secondary);flex:1}
+.cv{font-size:15px;font-weight:500;color:var(--color-text-primary);min-width:60px;text-align:right}
+input[type=range]{width:100%;margin:2px 0 10px}
+select{width:100%;font-size:14px;padding:6px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+#cw{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:#0c1018}
+canvas{display:block;width:100%}
+#meters{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mt{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 12px}
+.ml{font-size:12px;color:var(--color-text-secondary);margin-bottom:3px}
+.mv{font-size:16px;font-weight:500;color:var(--color-text-primary)}
+.mv.go{color:#1D9E75}.mv.no{color:#E24B4A}
+#sb{font-size:13px;line-height:1.65;color:var(--color-text-secondary);background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:9px 14px}
+.fbar{height:10px;border-radius:4px;margin:4px 0 2px;background:linear-gradient(to right,#cc0000,#ff6600,#ffcc00,#66cc00,#00cccc,#4488ff,#8800ff)}
+.tick{display:flex;justify-content:space-between;font-size:10px;color:var(--color-text-tertiary);margin-bottom:8px}
+</style>
+
+<h2 class="sr-only">Photoelectric effect — Millikan apparatus simulation with correct frequency range spanning IR through UV</h2>
+<div id="root">
+<div id="controls">
+  <div class="card">
+    <div class="ctitle">Light source</div>
+    <div class="cr"><span class="cl">Frequency</span><span class="cv" id="vF">5.0 ×10¹⁴</span></div>
+    <div class="fbar"></div>
+    <div class="tick"><span>IR</span><span>red</span><span>green</span><span>blue</span><span>UV</span></div>
+    <input type="range" id="slF" min="200" max="1500" value="500" step="5">
+    <div class="cr"><span class="cl">Intensity</span><span class="cv" id="vI">5</span></div>
+    <input type="range" id="slI" min="1" max="10" value="5" step="1">
+  </div>
+  <div class="card">
+    <div class="ctitle">Metal cathode</div>
+    <select id="selM">
+      <option value="cs">Caesium — φ = 2.10 eV  (threshold: 5.07 ×10¹⁴ Hz)</option>
+      <option value="k">Potassium — φ = 2.30 eV  (threshold: 5.55 ×10¹⁴ Hz)</option>
+      <option value="na">Sodium — φ = 2.75 eV  (threshold: 6.64 ×10¹⁴ Hz)</option>
+      <option value="zn">Zinc — φ = 4.30 eV  (threshold: 10.4 ×10¹⁴ Hz)</option>
+      <option value="al">Aluminium — φ = 4.08 eV  (threshold: 9.86 ×10¹⁴ Hz)</option>
+      <option value="cu">Copper — φ = 4.50 eV  (threshold: 10.9 ×10¹⁴ Hz)</option>
+      <option value="ag">Silver — φ = 4.26 eV  (threshold: 10.3 ×10¹⁴ Hz)</option>
+      <option value="pt">Platinum — φ = 5.65 eV  (threshold: 13.6 ×10¹⁴ Hz)</option>
+    </select>
+    <div style="margin-top:10px;padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:13px;color:var(--color-text-secondary);line-height:1.5" id="hint"></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">Retarding / accelerating voltage</div>
+    <div class="cr"><span class="cl">Bias voltage</span><span class="cv" id="vV">0.0 V</span></div>
+    <input type="range" id="slV" min="-30" max="30" value="0" step="1">
+    <div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:10px">− = retarding (stops electrons) · + = accelerating</div>
+    <div class="cr"><span class="cl">Photon energy</span><span class="cv" id="mEp" style="font-size:14px">—</span></div>
+    <div class="cr"><span class="cl">Work function φ</span><span class="cv" id="mWf" style="font-size:14px">—</span></div>
+    <div class="cr"><span class="cl">Max KE</span><span class="cv" id="mKE" style="font-size:14px">—</span></div>
+  </div>
+</div>
+
+<div id="cw"><canvas id="C" height="300"></canvas></div>
+
+<div id="meters">
+  <div class="mt"><div class="ml">Current</div><div class="mv" id="mCur">— µA</div></div>
+  <div class="mt"><div class="ml">Emission</div><div class="mv" id="mEm">—</div></div>
+  <div class="mt"><div class="ml">Threshold frequency</div><div class="mv" id="mTh">—</div></div>
+  <div class="mt"><div class="ml">Stopping voltage</div><div class="mv" id="mSV">—</div></div>
+</div>
+<div id="sb">Adjust the frequency slider and select a metal to begin.</div>
+</div>
+
+<script>
+(function(){
+const METALS={
+  cs:{name:'Caesium', wf:2.10,col:'#c8a84b'},
+  k: {name:'Potassium',wf:2.30,col:'#c09080'},
+  na:{name:'Sodium',  wf:2.75,col:'#e8c060'},
+  zn:{name:'Zinc',    wf:4.30,col:'#7799aa'},
+  al:{name:'Aluminium',wf:4.08,col:'#b8bfc8'},
+  cu:{name:'Copper',  wf:4.50,col:'#b87333'},
+  ag:{name:'Silver',  wf:4.26,col:'#c8c8c8'},
+  pt:{name:'Platinum',wf:5.65,col:'#909098'},
+};
+const h=4.136e-15;
+
+const C=document.getElementById('C');
+const ctx=C.getContext('2d');
+let W=0,H=300;
+function resize(){W=document.getElementById('cw').clientWidth;C.width=W;C.height=H;}
+setTimeout(()=>{resize();startLoop();},40);
+window.addEventListener('resize',()=>{resize();});
+
+function g(id){return document.getElementById(id);}
+function gv(id){return parseFloat(g(id).value);}
+
+function getF14(){return gv('slF')/100;}
+
+function freqToRGB(f14){
+  if(f14<3.84)  return[220,40,0];
+  if(f14<4.82)  return[255,110,0];
+  if(f14<5.00)  return[255,200,0];
+  if(f14<5.45)  return[60,200,60];
+  if(f14<5.90)  return[0,200,200];
+  if(f14<6.59)  return[50,120,255];
+  if(f14<7.89)  return[110,30,255];
+  return[200,0,255];
+}
+function frgb(f14,a){const[r,gg,b]=freqToRGB(f14);return`rgba(${r},${gg},${b},${a})`;}
+function fhex(f14){const[r,gg,b]=freqToRGB(f14);return`rgb(${r},${gg},${b})`;}
+
+function freqLabel(f14){
+  if(f14<3.84) return'infrared (IR)';
+  if(f14<7.89) return'visible light';
+  return'ultraviolet (UV)';
+}
+
+g('slF').oninput=()=>{
+  const f=getF14();
+  g('vF').textContent=f.toFixed(2)+' ×10¹⁴ Hz';
+  updateMeters();
+};
+g('slI').oninput=()=>{g('vI').textContent=gv('slI');updateMeters();};
+g('slV').oninput=()=>{g('vV').textContent=(gv('slV')/10).toFixed(1)+' V';updateMeters();};
+g('selM').oninput=()=>{updateMeters();};
+
+function getState(){
+  const f14=getF14();
+  const Vapp=gv('slV')/10;
+  const metal=METALS[g('selM').value];
+  const Ep=h*f14*1e14;
+  const wf=metal.wf;
+  const KE0=Math.max(0,Ep-wf);
+  const emits=Ep>wf;
+  const stopV=KE0;
+  const netKE=emits?Math.max(0,KE0-Vapp):0;
+  const reaches=netKE>0;
+  const intensity=gv('slI');
+  const current=reaches?netKE*intensity*1.2:0;
+  return{f14,Vapp,metal,Ep,wf,KE0,emits,stopV,netKE,reaches,current,intensity};
+}
+
+function updateMeters(){
+  const s=getState();
+  g('mEp').textContent=s.Ep.toFixed(3)+' eV';
+  g('mWf').textContent=s.wf.toFixed(2)+' eV';
+  const ke=g('mKE');
+  ke.textContent=s.emits?s.KE0.toFixed(3)+' eV':'0 eV';
+  ke.style.color=s.emits?'#1D9E75':'#E24B4A';
+  const thresh=s.wf/(h*1e14);
+  g('mTh').textContent=thresh.toFixed(2)+' ×10¹⁴ Hz';
+  g('mSV').textContent=s.emits?s.stopV.toFixed(3)+' V':'n/a';
+  const cur=g('mCur');
+  cur.textContent=s.reaches?s.current.toFixed(2)+' µA':'0.00 µA';
+  cur.className='mv '+(s.reaches&&s.current>0?'go':'no');
+  const em=g('mEm');
+  em.textContent=s.emits?(s.reaches?'yes — current flows':'yes — voltage stops it'):'no';
+  em.className='mv '+(s.emits?'go':'no');
+
+  const thresh14=thresh.toFixed(2);
+  const f=s.f14.toFixed(2);
+  g('hint').textContent=`Threshold for ${s.metal.name}: ${thresh14} ×10¹⁴ Hz. Your light: ${f} ×10¹⁴ Hz. ${s.emits?'Above threshold — emission possible!':'Below threshold — increase frequency.'}`;
+
+  const region=freqLabel(s.f14);
+  if(!s.emits){
+    g('sb').textContent=`${region} · Photon energy ${s.Ep.toFixed(3)} eV is below the work function of ${s.metal.name} (${s.wf.toFixed(2)} eV). No electrons emitted regardless of intensity. Increase frequency or choose a metal with lower work function.`;
+  } else if(!s.reaches){
+    g('sb').textContent=`${region} · Electrons emitted! KE = ${s.KE0.toFixed(3)} eV. But retarding voltage ${s.Vapp.toFixed(1)} V exceeds stopping voltage ${s.stopV.toFixed(3)} V — electrons turned back. Current = 0.`;
+  } else {
+    g('sb').textContent=`${region} · Electrons emitted with KE = ${s.KE0.toFixed(3)} eV and reach the collector. Current = ${s.current.toFixed(2)} µA. Intensity controls the count, not the energy — Einstein 1905.`;
+  }
+}
+
+let photons=[],electrons=[],sparks=[],frame=0;
+
+const LAMP_X=54,LAMP_Y=80;
+const CAT_X=()=>Math.round(W*0.32);
+const ANOD_X=()=>Math.round(W*0.68);
+const TUBE_Y=55,TUBE_H=120;
+const MID_Y=()=>TUBE_Y+TUBE_H/2;
+
+function drawScene(s){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0c1018';ctx.fillRect(0,0,W,H);
+
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=0.5;
+  for(let x=0;x<W;x+=36){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=36){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  const cx=CAT_X(),ax=ANOD_X(),my=MID_Y();
+
+  const lampR=20;
+  ctx.fillStyle='#22201a';
+  ctx.beginPath();ctx.arc(LAMP_X,LAMP_Y,lampR,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#665840';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(LAMP_X,LAMP_Y,lampR,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle=fhex(s.f14);
+  ctx.beginPath();ctx.arc(LAMP_X,LAMP_Y,8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='500 10px sans-serif';ctx.textAlign='center';
+  ctx.fillText('arc lamp',LAMP_X,LAMP_Y+lampR+13);
+  ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='10px sans-serif';
+  ctx.fillText(s.f14.toFixed(2)+'×10¹⁴Hz',LAMP_X,LAMP_Y+lampR+24);
+
+  const nRays=6;
+  for(let i=0;i<nRays;i++){
+    const t=i/(nRays-1);
+    const startY=LAMP_Y+(t-0.5)*20;
+    const endY=my+(t-0.5)*60;
+    ctx.beginPath();ctx.setLineDash([5,5]);
+    ctx.moveTo(LAMP_X+lampR,startY);ctx.lineTo(cx-4,endY);
+    ctx.strokeStyle=frgb(s.f14,0.45);ctx.lineWidth=1;ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  const tx1=cx-50,tx2=ax+50,ty=TUBE_Y,th=TUBE_H;
+  ctx.fillStyle='rgba(140,200,255,0.03)';
+  ctx.strokeStyle='rgba(140,200,255,0.22)';ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(tx1+14,ty);ctx.lineTo(tx2-14,ty);
+  ctx.quadraticCurveTo(tx2+8,ty,tx2+8,ty+16);
+  ctx.lineTo(tx2+8,ty+th-16);
+  ctx.quadraticCurveTo(tx2+8,ty+th,tx2-14,ty+th);
+  ctx.lineTo(tx1+14,ty+th);
+  ctx.quadraticCurveTo(tx1-8,ty+th,tx1-8,ty+th-16);
+  ctx.lineTo(tx1-8,ty+16);
+  ctx.quadraticCurveTo(tx1-8,ty,tx1+14,ty);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(140,200,255,0.45)';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillText('vacuum tube (evacuated glass)',tx1+(tx2-tx1)/2,ty-7);
+
+  ctx.fillStyle=s.metal.col;
+  ctx.fillRect(cx-5,my-28,10,56);
+  ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;
+  ctx.strokeRect(cx-5,my-28,10,56);
+  ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='500 11px sans-serif';ctx.textAlign='center';
+  ctx.fillText('cathode',cx,my+44);
+  ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='10px sans-serif';
+  ctx.fillText('('+s.metal.name+')',cx,my+56);
+
+  ctx.strokeStyle='rgba(200,200,200,0.5)';ctx.lineWidth=1.5;
+  for(let dy=-22;dy<=22;dy+=22){
+    ctx.beginPath();ctx.moveTo(ax-8,my+dy);ctx.lineTo(ax+8,my+dy);ctx.stroke();
+  }
+  ctx.beginPath();ctx.moveTo(ax,my-26);ctx.lineTo(ax,my+26);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='500 11px sans-serif';ctx.textAlign='center';
+  ctx.fillText('anode',ax,my+44);
+  ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='10px sans-serif';
+  ctx.fillText('(collector)',ax,my+56);
+
+  const wireTop=ty-18;
+  const midX=tx1+(tx2-tx1)/2;
+  const batY=H-58, batX=midX-60;
+  const galvX=midX+55, galvY=batY;
+
+  ctx.strokeStyle=s.reaches&&s.current>0
+    ?`rgba(29,158,117,${0.5+Math.sin(frame*0.12)*0.15})`
+    :'rgba(255,190,60,0.4)';
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx,ty);ctx.lineTo(cx,wireTop);ctx.lineTo(batX-22,wireTop);ctx.lineTo(batX-22,batY);ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(ax,ty);ctx.lineTo(ax,wireTop);ctx.lineTo(galvX+22,wireTop);ctx.lineTo(galvX+22,galvY);ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(batX+22,batY);ctx.lineTo(galvX-22,galvY);ctx.stroke();
+
+  const bw=44,bh=24;
+  ctx.fillStyle='#1c2434';
+  ctx.beginPath();ctx.roundRect(batX-bw/2,batY-bh/2,bw,bh,4);ctx.fill();
+  ctx.strokeStyle='rgba(255,190,60,0.5)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(batX-bw/2,batY-bh/2,bw,bh,4);ctx.stroke();
+  const vc=s.Vapp>0?'#ff9966':s.Vapp<0?'#66aaff':'#998860';
+  ctx.fillStyle=vc;ctx.font='500 11px sans-serif';ctx.textAlign='center';
+  ctx.fillText((s.Vapp>=0?'+':'')+s.Vapp.toFixed(1)+'V',batX,batY+4);
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='10px sans-serif';
+  ctx.fillText('voltage',batX,batY+bh/2+12);
+
+  const gr=24;
+  ctx.fillStyle='#141e2e';
+  ctx.beginPath();ctx.arc(galvX,galvY,gr,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(100,180,255,0.4)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(galvX,galvY,gr,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.55)';ctx.font='500 11px sans-serif';ctx.textAlign='center';
+  ctx.fillText('G',galvX,galvY+4);
+  const nail=s.reaches&&s.current>0
+    ?(-Math.PI/2+Math.min(s.current*0.13,0.9))
+    :(-Math.PI/2);
+  ctx.strokeStyle=s.reaches&&s.current>0?'#1D9E75':'#445566';
+  ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(galvX,galvY);
+  ctx.lineTo(galvX+Math.cos(nail)*20,galvY+Math.sin(nail)*20);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillText('galvanometer',galvX,galvY+gr+12);
+
+  photons.forEach(p=>{
+    if(!p.alive)return;
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x>=cx-5){
+      p.alive=false;
+      if(s.emits){
+        for(let i=0;i<5;i++){
+          const a=(Math.random()-0.5)*Math.PI*0.75;
+          sparks.push({x:cx+5,y:p.y,vx:1.4+Math.random()*0.8,vy:Math.sin(a)*1.1,life:16});
+        }
+        if(s.reaches){
+          const spd=0.6+s.netKE*0.5;
+          electrons.push({x:cx+6,y:p.y,vx:spd,vy:(Math.random()-0.5)*0.25,alive:true,trail:[],age:0});
+        }
+      }
+    }
+    const[r,gg,b]=freqToRGB(s.f14);
+    ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${r},${gg},${b},0.85)`;ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,5.5,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${r},${gg},${b},0.18)`;ctx.fill();
+  });
+  photons=photons.filter(p=>p.alive&&p.x>LAMP_X-10);
+
+  electrons.forEach(e=>{
+    if(!e.alive)return;
+    e.trail.push({x:e.x,y:e.y});
+    if(e.trail.length>22)e.trail.shift();
+    e.x+=e.vx;e.y+=e.vy;e.age++;
+    if(e.x>ax+12||e.age>220)e.alive=false;
+    for(let i=1;i<e.trail.length;i++){
+      const a=i/e.trail.length;
+      ctx.beginPath();ctx.moveTo(e.trail[i-1].x,e.trail[i-1].y);ctx.lineTo(e.trail[i].x,e.trail[i].y);
+      ctx.strokeStyle=`rgba(29,158,117,${a*0.55})`;ctx.lineWidth=1.2;ctx.stroke();
+    }
+    ctx.beginPath();ctx.arc(e.x,e.y,3,0,Math.PI*2);ctx.fillStyle='#1D9E75';ctx.fill();
+  });
+  electrons=electrons.filter(e=>e.alive);
+
+  sparks.forEach(sp=>{
+    sp.x+=sp.vx;sp.y+=sp.vy;sp.life--;
+    const a=sp.life/16;
+    const[r,gg,b]=freqToRGB(s.f14);
+    ctx.beginPath();ctx.arc(sp.x,sp.y,1.8,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${r},${gg},${b},${a})`;ctx.fill();
+  });
+  sparks=sparks.filter(sp=>sp.life>0);
+
+  const threshF14=s.wf/(h*1e14);
+  const threshPct=(threshF14*100-200)/(1500-200);
+  const barX=LAMP_X+lampR+8, barW=cx-LAMP_X-lampR-20;
+  if(barW>30){
+    const tx_bar=barX+barW*Math.min(1,Math.max(0,threshPct));
+    ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(tx_bar,my-35);ctx.lineTo(tx_bar,my+35);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='9px sans-serif';ctx.textAlign='center';
+    ctx.fillText('φ threshold',tx_bar,my-38);
+  }
+}
+
+function spawnPhoton(s){
+  const rate=Math.max(2,Math.round(12/gv('slI')));
+  if(frame%rate!==0)return;
+  const cx=CAT_X(),my=MID_Y();
+  const dy=(Math.random()-0.5)*50;
+  const dx=cx-LAMP_X-20;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  const spd=2.4;
+  photons.push({x:LAMP_X+20,y:LAMP_Y+(dy*0.1),vx:dx/dist*spd,vy:dy/dist*spd,alive:true});
+}
+
+function loop(){
+  frame++;
+  const s=getState();
+  spawnPhoton(s);
+  drawScene(s);
+  requestAnimationFrame(loop);
+}
+
+function startLoop(){resize();updateMeters();loop();}
+})();
+</script>
