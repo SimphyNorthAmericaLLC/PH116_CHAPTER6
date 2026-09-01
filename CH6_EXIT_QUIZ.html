@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Photoelectric Effect, Blackbody Radiation & Bohr Model Quiz — Restart on Wrong</title>
+<style>body{font-family:system-ui,sans-serif;line-height:1.45;margin:0;padding:24px;background:radial-gradient(circle at top,#1b2745,#090a0f);color:#f2f2f2}#quiz3{max-width:760px;margin:auto;background:#121212;border:1px solid #2c2c2c;border-radius:18px;padding:24px;box-shadow:0 0 25px rgba(0,0,0,.4)}.quiz-header{text-align:center;margin-bottom:18px}.subtitle{color:#9fdcff}.progress-wrap{width:100%;height:10px;background:#222;border-radius:20px;overflow:hidden;margin-bottom:18px}#progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#00d4ff,#00ff99)}#q3_stem{margin:.8rem 0 1rem;font-size:1.08rem;font-weight:500}.q3_option{border:1px solid #333;border-radius:12px;padding:12px;background:#181818;color:#f2f2f2;cursor:pointer;text-align:left}.correct{color:#00ff88}.incorrect{color:#ff6666}</style>
+</head>
+<body>
+  <div id="quiz3"><div class="quiz-header"><h1>PH116 Exit Quiz</h1><div class="subtitle">Photoelectric Effect, Blackbody Radiation &amp; Bohr Model</div></div><div class="progress-wrap"><div id="progress-bar"></div></div>
+    <h3 id="q3_progress"></h3>
+    <div id="q3_stem"></div>
+    <div id="q3_options"></div>
+    <div id="q3_feedback"></div>
+    <div id="q3_nav">
+      <button id="q3_restart" style="margin-left:auto;">Restart</button>
+    </div>
+  </div>
+
+<script>
+/* Exact wording preserved. Option order exactly as provided (no shuffling). */
+const quiz3 = [
+  {
+    stem: "Two different metals are illuminated by identical monochromatic light. One metal has a larger work function than the other. Assuming photoemission occurs for both metals, which statement is correct?",
+    choices: ["The larger-work-function metal produces electrons with greater kinetic energy.","The larger-work-function metal produces electrons with smaller maximum kinetic energy.","Both metals produce electrons with identical maximum kinetic energy.","The larger-work-function metal always emits more electrons."],
+    correctIndex: 1
+  },
+  {
+    stem: "During a photoelectric experiment, a larger reverse voltage is required to stop all emitted electrons from reaching the collector. This indicates that the emitted electrons",
+    choices: ["have a greater maximum kinetic energy.","carry a larger electric charge.","have greater mass.","are emitted at a higher rate."],
+    correctIndex: 0
+  },
+  {
+    stem: "A metal has threshold frequency f. It is illuminated by light whose frequency is 0.99 f but the light intensity is made extremely large. What will be observed?",
+    choices: ["Electrons are eventually emitted after enough photons accumulate.","Electrons are emitted with very low kinetic energy.","No photoelectrons are emitted because each photon lacks sufficient energy.","Electrons are emitted only after prolonged exposure."],
+    correctIndex: 2
+  },
+  {
+    stem: "Monochromatic light with frequency above the threshold frequency shines on a metal surface. The brightness of the light source is then doubled. Which quantity is expected to increase?",
+    choices: ["Maximum kinetic energy of the emitted electrons.","Number of emitted photoelectrons per second.","Work function of the metal.","Threshold frequency of the metal."],
+    correctIndex: 1
+  },
+  {
+    stem: "As the frequency of thermal radiation increases, each photon carries more energy. Why doesn't this cause the total energy inside a blackbody cavity to diverge?",
+    choices: ["High-frequency photons gradually lose energy.","The cavity cannot support high-frequency standing waves.","Extremely energetic photons become exponentially less likely to exist in thermal equilibrium.","High-frequency photons interfere destructively with one another."],
+    correctIndex: 2
+  },
+  {
+    stem: "A blackbody cavity remains at constant temperature while the frequency of one electromagnetic mode is doubled. What is the expected result?",
+    choices: ["Each photon carries twice as much energy, but the average energy stored in that mode becomes smaller.","The photon energy decreases while the average energy increases.","Both the photon energy and average mode energy double.","Neither quantity changes because the temperature is fixed."],
+    correctIndex: 0
+  },
+  {
+    stem: "A student argues that once Planck developed his blackbody radiation equation, the equation E=hf was no longer needed. Which response is most accurate?",
+    choices: ["Correct, because Planck's radiation law completely replaces E=hf","Correct, because E=hf applies only to low frequencies.","Incorrect. E=hf gives the energy of a single photon, whereas Planck's law gives the average thermal energy of a cavity mode.","Incorrect, because both equations calculate the same quantity."],
+    correctIndex: 2
+  },
+  {
+    stem: "Classical physics predicted that a hot object should emit unlimited energy at very short wavelengths. Why does Planck's theory predict otherwise?",
+    choices: ["Ultraviolet photons possess less energy than visible photons.","High-frequency standing waves cannot exist inside a cavity.","The probability of exciting very high-frequency modes decreases exponentially with frequency.","Ultraviolet radiation travels more slowly than infrared radiation."],
+    correctIndex: 2
+  },
+  {
+    stem: "In Planck's blackbody radiation law, what physical role is played by the factor 1/(e^(hf/kT)-1)?",
+    choices: ["It changes the energy carried by individual photons.","It describes the statistical population of photons in a cavity mode at thermal equilibrium.","It determines the number of standing-wave modes.","It accounts for changes in the speed of light inside the cavity."],
+    correctIndex: 1
+  },
+  {
+    stem: "Two electromagnetic modes inside a blackbody cavity have different frequencies but the cavity remains at the same temperature. Which statement correctly compares the two modes?",
+    choices: ["The higher-frequency mode contains both more energetic photons and greater average thermal energy.","The higher-frequency mode contains less energetic photons but greater average thermal energy.","The higher-frequency mode contains more energetic photons, but less average thermal energy because it is much less likely to be thermally occupied.","Both modes contain photons of the same energy."],
+    correctIndex: 2
+  },
+  {
+    stem: "Two lasers deliver the same total power onto a metal surface. Laser A emits red light. Laser B emits blue light. Both wavelengths are capable of producing photoelectrons. Which laser ejects electrons with the greater maximum kinetic energy?",
+    choices: ["Laser A","Laser B","Both eject electrons with the same maximum kinetic energy.","The answer depends only on the laser power."],
+    correctIndex: 1
+  },
+  {
+    stem: "Two beams of light illuminate the same metal. Beam A: 100 photons each second, each carrying 6 eV. Beam B: 200 photons each second, each carrying 3 eV. The metal has a work function of 2 eV. Which statement is correct?",
+    choices: ["Electrons emitted by Beam A have the greater maximum kinetic energy.","Electrons emitted by Beam B have the greater maximum kinetic energy.","Both beams produce electrons with identical maximum kinetic energy.","Neither beam can eject electrons."],
+    correctIndex: 0
+  },
+  {
+    stem: "Bohr proposed that electrons in atoms occupy only certain allowed energy levels. How does this idea explain why electrons do not continuously fall into the nucleus?",
+    choices: ["The nucleus exerts a repulsive force.","Electrons can exist only in specific stable orbits without radiating energy.","Gravity exactly balances the electric attraction.","Electrons carry no electric charge."],
+    correctIndex: 1
+  },
+  {
+    stem: "An electron in a hydrogen atom is excited from the second to the fifth energy level. As the atom eventually returns to its ground state, which statement is correct?",
+    choices: ["Exactly one photon must be emitted.","The atom may emit several photons through intermediate transitions.","No photons are emitted during the return process.","Every emitted photon must belong to the ultraviolet region."],
+    correctIndex: 1
+  },
+  {
+    stem: "The primary purpose of the Rydberg equation is to determine",
+    choices: ["the intensity of hydrogen's spectral lines.","the wavelengths associated with electronic transitions in hydrogen.","the orbital speed of the electron.","the lifetime of excited atomic states."],
+    correctIndex: 1
+  },
+  {
+    stem: "A hydrogen atom absorbs a photon whose energy exactly matches an allowed transition. Immediately after absorption,",
+    choices: ["the electron occupies a higher allowed energy level.","the electron moves closer to the nucleus.","the atom becomes ionized.","the electron begins spiraling toward the nucleus."],
+    correctIndex: 0
+  },
+  {
+    stem: "Which of the following electron transitions in hydrogen releases the most energetic photon?",
+    choices: ["n = 5 -> n = 4","n = 4 -> n = 3","n = 3 -> n = 2","n = 2 -> n = 1"],
+    correctIndex: 3
+  },
+  {
+    stem: "Which transition in hydrogen produces the photon with the smallest energy?",
+    choices: ["n = 2 -> n = 1","n = 3 -> n = 2","n = 5 -> n = 4","n = 6 -> n = 5"],
+    correctIndex: 3
+  },
+  {
+    stem: "Two hydrogen atoms absorb photons. Atom A: electron moves from n = 1 -> n = 2. Atom B: electron moves from n = 3 -> n = 4. Which absorbed photon carries more energy?",
+    choices: ["The photon absorbed by Atom A.","The photon absorbed by Atom B.","Both photons have the same energy.","The answer cannot be determined."],
+    correctIndex: 0
+  },
+  {
+    stem: "A hydrogen atom is prepared in the excited state n = 5. Which statement must always be true?",
+    choices: ["The atom emits exactly one photon before reaching the ground state.","The first emitted photon must belong to the Balmer series.","The atom can emit several photons as it cascades through lower energy levels before reaching the ground state.","The first transition must always be n = 5 -> n = 4."],
+    correctIndex: 2
+  }
+];
+
+const els = {
+  progress: document.getElementById('q3_progress'),
+  stem: document.getElementById('q3_stem'),
+  options: document.getElementById('q3_options'),
+  feedback: document.getElementById('q3_feedback'),
+  restart: document.getElementById('q3_restart'),
+};
+
+let idx = 0;
+let score = 0;
+
+function shuffleQuestions() {
+  for (let i = quiz3.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [quiz3[i], quiz3[j]] = [quiz3[j], quiz3[i]];
+  }
+}
+
+function restartQuiz() {
+  idx = 0;
+  score = 0;
+  shuffleQuestions();
+  render();
+}
+
+function render() {
+  const total = quiz3.length;
+  els.progress.textContent=`Question ${idx+1} of ${total} · Score: ${score}/${total}`;document.getElementById('progress-bar').style.width=((idx)/quiz3.length*100)+'%';
+  els.stem.textContent = quiz3[idx].stem;
+  els.options.innerHTML = '';
+  els.feedback.textContent='';els.feedback.className='';
+
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  quiz3[idx].choices.forEach((text, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'q3_option';
+    btn.type = 'button';
+    btn.innerHTML = `<strong>${letters[i]})</strong> ${text}`;
+    btn.addEventListener('click', () => handleChoice(i));
+    els.options.appendChild(btn);
+  });
+}
+
+function handleChoice(i) {
+  const correct = quiz3[idx].correctIndex;
+  if (i === correct) {
+    score++;
+    els.feedback.className='correct';els.feedback.textContent='Correct!';
+    setTimeout(() => {
+      idx++;
+      if (idx < quiz3.length) {
+        render();
+      } else {
+        els.progress.textContent = `Completed · Final Score: ${score}/${quiz3.length}`;
+        els.stem.textContent = 'Quiz finished.';
+        els.options.innerHTML = '';
+        els.feedback.textContent = 'Press Restart to try again.';
+      }
+    }, 600);
+  } else {
+    els.feedback.className='incorrect';els.feedback.textContent='Incorrect — restarting from Question 1…';
+    setTimeout(restartQuiz, 700);
+  }
+}
+
+els.restart.addEventListener('click', restartQuiz);
+restartQuiz();
+</script>
+</body>
+</html>
